@@ -8,6 +8,7 @@ $zip = $PSScriptRoot + "\7z.exe"
 $rclone = $PSScriptRoot + "\rclone.exe" 
 $BackupFile = "${BackupDir}\${DatabaseName}_${Timestamp}.bak"
 $ArchiveFile = "${ArchiveDir}\${DatabaseName}_${Timestamp}.7z"
+$ConfigFile = $PSScriptRoot + "\rclone.conf"
 
 # Create backup and archive directories if they don't exist
 if (!(Test-Path $BackupDir)) {
@@ -30,13 +31,13 @@ Backup-SqlDatabase -ServerInstance $ServerInstance -Database $DatabaseName -Back
 Write-Host "Database backup completed successfully."
  
 # Archive the backup using 7-Zip
-& $zip a -t7z $ArchiveFile $BackupFile
+& $zip a -t7z -mx=1 $ArchiveFile $BackupFile
 Write-Host "Backup archived successfully."
 
 # Remove the original backup file
 Remove-Item $BackupFile
 Write-Host "Original backup file removed."
 
-& $rclone copy "$($ArchiveFile)" client: --config rclone.conf
+& $rclone copy "$($ArchiveFile)" client: --config "$($ConfigFile)"
 
 Get-ChildItem $ArchiveDir | Sort-Object Name -desc | Select-Object -Skip 7 | Remove-Item -Force
